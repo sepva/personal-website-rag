@@ -7,9 +7,35 @@
 	"name": "personal-website-rag",
 	"main": "src/index.js",
 	"compatibility_date": "2026-01-03",
+	"ai": {
+		"binding": "AI",
+		"remote": true
+	},
 	"observability": {
 		"enabled": true
-	}
+	},
+	"workflows": [
+		{
+			"name": "rag",
+			"binding": "RAG_WORKFLOW",
+			"class_name": "RAGWorkflow"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "personal-website-db",
+			"database_id": "429101e1-40b1-43dc-adf4-c97feb30f26d",
+			"remote": true
+		}
+	],
+	"vectorize": [
+		{
+			"binding": "VECTOR_INDEX",
+			"index_name": "personal-website-index",
+			"remote": true
+		}
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
