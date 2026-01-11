@@ -34,6 +34,7 @@ echo "${DEPLOYMENT_TOKEN}" | npx wrangler secret put DEPLOYMENT_SECRET
 
 echo ""
 echo "✅ Secret added to worker"
+echo "If you want to build on git push using a connection with git in cloudflare, make sure to add the secret there as well."
 echo ""
 
 chmod +x trigger-after-deploy.sh
