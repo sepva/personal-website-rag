@@ -1,7 +1,57 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
-// import { Hono } from 'hono';
 import { allContent } from './data/mockData';
-// const app = new Hono();
+
+
+// Default export for the Worker with fetch handler
+export default {
+	async fetch(request, env, ctx) {
+		const url = new URL(request.url);
+
+		// Endpoint to trigger the RAGWorkflow (used after deployment)
+		if (url.pathname === '/trigger-rag-rebuild' && request.method === 'POST') {
+			// Verify the authorization token
+			const authHeader = request.headers.get('Authorization');
+			const expectedToken = env.DEPLOYMENT_SECRET;
+
+			if (!expectedToken) {
+				console.error('DEPLOYMENT_SECRET not configured');
+				return Response.json(
+					{ success: false, error: 'Server configuration error' },
+					{ status: 500 }
+				);
+			}
+
+			if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
+				console.warn('Unauthorized attempt to trigger RAGWorkflow');
+				return Response.json(
+					{ success: false, error: 'Unauthorized' },
+					{ status: 401 }
+				);
+			}
+
+			try {
+				console.log('Authorized request - triggering RAGWorkflow to rebuild database...');
+				const workflowInstance = await env.RAG_WORKFLOW.create();
+				return Response.json({
+					success: true,
+					message: 'RAGWorkflow triggered successfully',
+					workflowId: workflowInstance.id,
+				});
+			} catch (error) {
+				console.error('Error triggering RAGWorkflow:', error);
+				return Response.json(
+					{
+						success: false,
+						error: error.message,
+					},
+					{ status: 500 }
+				);
+			}
+		}
+
+		return Response.json({ message: 'Personal Website RAG API' });
+	},
+};
 
 export class RAGWorkflow extends WorkflowEntrypoint {
 	async run(event, step) {
