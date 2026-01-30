@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
-import { allContent } from './data/mockData';
+import { allContent } from './data/allContent.ts';
 
 
 // Default export for the Worker with fetch handler
@@ -126,44 +126,3 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 		}
 	}
 }
-
-// app.post('/data', async (c) => {
-// 	await c.env.RAG_WORKFLOW.create();
-// 	return c.text('Created note', 201);
-// });
-
-// app.get('/data/:dataType/:query', async (c) => {
-// 	const { dataType, query } = c.req.param();
-// 	const env = c.env;
-
-// 	// Generate embedding for the query
-// 	const queryEmbedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
-// 		text: query,
-// 	});
-// 	const queryVector = queryEmbedding.data[0];
-// 	if (!queryVector) throw new Error('Failed to generate query vector embedding');
-
-// 	// Query the vector index
-// 	const searchResults = await env.VECTOR_INDEX.query(queryVector, {
-// 		topK: 1,
-// 		filter: { data_type: dataType },
-// 	});
-
-// 	let vecId;
-// 	if (searchResults.matches && searchResults.matches.length > 0 && searchResults.matches[0]) {
-// 		vecId = searchResults.matches[0].id;
-// 	} else {
-// 		console.log('No matching vector found or searchResults.matches is empty');
-// 	}
-
-// 	// Retrieve full records from D1
-// 	if (vecId) {
-// 		const getRecordQuery = `SELECT * FROM ${dataType} WHERE id = ?`;
-// 		const { results } = await env.DB.prepare(getRecordQuery).bind(vecId).all();
-// 		return c.json(results);
-// 	} else {
-// 		return c.json({ message: 'No matching records found' }, 404);
-// 	}
-// });
-
-// export default app;
