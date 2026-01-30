@@ -20,3 +20,14 @@ To keep the project in the free tier as much as possible I went looking for free
 I started from the agents starter template from Cloudflare which already gave me everything needed to have a working chat agent with tools deployed on Cloudflare. I used Figma Make to generate me a nice UI, as I really have no aesthetic intuition or design talent. But for the 2 minutes I spent on it, not that bad UI I think...
 
 ![Figma Make](./images/Figma_make_view.png)
+
+I used the MCP server of Figma to get the generated front-end on top of the existing back-end application (with minimal front-end). After some debugging, it actually didn't took that long to get working.
+
+The next step was to add my own content to the application, retrievable for the LLM. I made a RAGWorkflow that runs when I push the repo with my content to Github. It fills an SQLite DB with the content and meta-data and adds a vector index. The images in the content are fetched from Github itself, the workflow makes sure the relative links are transformed to URLs pointing to my Github repo. A cheap and simple CDN that does the job. 
+
+The LLM can retrieve the content in 2 ways:
+- Call a tool that will display a UI element directly in the chat that shows all content of a certain type (academics, professional and personal projects)
+- Call a tool to fetch content and information from the vector DB
+
+
+

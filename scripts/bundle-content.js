@@ -9,27 +9,27 @@ const contentDir = join(__dirname, '../src/data/content');
 const outputFile = join(__dirname, '../src/data/bundledContent.js');
 
 function readMarkdownFiles(dir) {
-  const files = readdirSync(dir);
-  const content = {};
-  
-  for (const file of files) {
-    const fullPath = join(dir, file);
-    const stat = statSync(fullPath);
-    
-    if (stat.isDirectory()) {
-      // Skip image directories
-      if (file === 'images') continue;
-      // Recursively read subdirectories
-      const subContent = readMarkdownFiles(fullPath);
-      Object.assign(content, subContent);
-    } else if (file.endsWith('.md')) {
-      const relativePath = fullPath.replace(contentDir + '/', '');
-      const fileContent = readFileSync(fullPath, 'utf-8');
-      content[relativePath] = fileContent;
-    }
-  }
-  
-  return content;
+	const files = readdirSync(dir);
+	const content = {};
+
+	for (const file of files) {
+		const fullPath = join(dir, file);
+		const stat = statSync(fullPath);
+
+		if (stat.isDirectory()) {
+			// Skip image directories
+			if (file === 'images') continue;
+			// Recursively read subdirectories
+			const subContent = readMarkdownFiles(fullPath);
+			Object.assign(content, subContent);
+		} else if (file.endsWith('.md')) {
+			const relativePath = fullPath.replace(contentDir + '/', '');
+			const fileContent = readFileSync(fullPath, 'utf-8');
+			content[relativePath] = fileContent;
+		}
+	}
+
+	return content;
 }
 
 const allContent = readMarkdownFiles(contentDir);
