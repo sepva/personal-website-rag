@@ -114,6 +114,14 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 		const env = this.env;
 		for (const [name, data] of Object.entries(allContent)) {
 			await step.do(`create database record entry for ${name}`, async () => {
+				// Handle empty content list - delete table if it exists
+				if (!data || data.length === 0) {
+					console.log(`No content found for ${name}, deleting table if it exists...`);
+					const dropTableQuery = `DROP TABLE IF EXISTS ${name}`;
+					await env.DB.prepare(dropTableQuery).run();
+					return;
+				}
+
 				// Create table if it doesn't exist
 				const keys = Object.keys(data[0]);
 				const columns = keys.map((key) => `${key} TEXT`).join(', ');
