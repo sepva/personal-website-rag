@@ -1,6 +1,67 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { allContent } from './data/allContent.ts';
+import { remark } from 'remark';
+import remarkParse from 'remark-parse';
+import { visit } from 'unist-util-visit';
+import * as path from 'path';
 
+// GitHub repository configuration for image CDN
+const GITHUB_CONFIG = {
+	owner: 'sepva',
+	repo: 'personal-website-rag',
+	branch: 'main',
+	basePath: 'src/data/content',
+};
+
+/**
+ * Transform markdown image references from local paths to GitHub raw URLs
+ * @param {string} markdownContent - The markdown content
+ * @param {string} markdownFilePath - Path to the markdown file (e.g., "projects/proj1.md")
+ * @returns {Promise<string>} - Transformed markdown with GitHub URLs
+ */
+async function transformMarkdownImages(markdownContent, markdownFilePath) {
+	const processor = remark().use(remarkParse);
+	const tree = processor.parse(markdownContent);
+
+	const transformations = [];
+
+	// Find all image nodes in the markdown AST
+	visit(tree, 'image', (node) => {
+		const imageSrc = node.url;
+
+		// Only transform relative paths (not already http/https URLs)
+		if (!imageSrc.startsWith('http://') && !imageSrc.startsWith('https://')) {
+			// Parse query parameters if present
+			const [pathPart, queryPart] = imageSrc.split('?');
+
+			// Resolve relative path to absolute path within the content directory
+			const markdownDir = path.dirname(markdownFilePath);
+			const resolvedPath = path.join(markdownDir, pathPart);
+
+			// Create GitHub raw URL
+			const githubUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.basePath}/${resolvedPath}`;
+
+			// Preserve query parameters (though GitHub ignores them, good for documentation)
+			const finalUrl = queryPart ? `${githubUrl}?${queryPart}` : githubUrl;
+
+			transformations.push({
+				original: imageSrc,
+				transformed: finalUrl,
+			});
+		}
+	});
+
+	// Apply transformations to the markdown content
+	let transformedContent = markdownContent;
+	for (const { original, transformed } of transformations) {
+		// Escape special regex characters in the original path
+		const escapedOriginal = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const regex = new RegExp(`!\\[([^\\]]*)\\]\\(${escapedOriginal}\\)`, 'g');
+		transformedContent = transformedContent.replace(regex, `![$1](${transformed})`);
+	}
+
+	return transformedContent;
+}
 
 // Default export for the Worker with fetch handler
 export default {
@@ -15,18 +76,12 @@ export default {
 
 			if (!expectedToken) {
 				console.error('DEPLOYMENT_SECRET not configured');
-				return Response.json(
-					{ success: false, error: 'Server configuration error' },
-					{ status: 500 }
-				);
+				return Response.json({ success: false, error: 'Server configuration error' }, { status: 500 });
 			}
 
 			if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
 				console.warn('Unauthorized attempt to trigger RAGWorkflow');
-				return Response.json(
-					{ success: false, error: 'Unauthorized' },
-					{ status: 401 }
-				);
+				return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 			}
 
 			try {
@@ -44,7 +99,7 @@ export default {
 						success: false,
 						error: error.message,
 					},
-					{ status: 500 }
+					{ status: 500 },
 				);
 			}
 		}
@@ -83,8 +138,17 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 				const preparedQuery = env.DB.prepare(insertDataQuery);
 
 				for (const item of data) {
+					// Transform markdown images to GitHub URLs
+					let processedItem = { ...item };
+					if (item.fullContent) {
+						// Construct the markdown file path relative to content directory
+						// Assuming the structure: <type>/<filename>.md
+						const markdownPath = `${name}/${item.id}.md`;
+						processedItem.fullContent = await transformMarkdownImages(item.fullContent, markdownPath);
+					}
+
 					const values = keys.map((key) => {
-						const value = item[key];
+						const value = processedItem[key];
 						// Handle undefined values
 						if (value === undefined) {
 							return null;
@@ -104,7 +168,7 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 					// Generate embedding for the content
 					const embedding = await step.do(`generate embedding for ${item.id}`, async () => {
 						const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
-							text: item.fullContent,
+							text: processedItem.fullContent,
 						});
 						const values = embedding.data[0];
 						if (!values) throw new Error('Failed to generate vector embedding');

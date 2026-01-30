@@ -18,3 +18,5 @@ Based on these detailed requirements, the fun part began!
 To keep the project in the free tier as much as possible I went looking for free hosting solutions. After some AI-assisted researching (one Perplexity question), I found that Cloudflare seemed like a good solution. It has a generous free tier of 100k requests per day for Workers, which is plenty for the AI bots scraping my website. Cloudflare also has support for SQLite and vector indexes with again high enough limits within the free tier.
 
 I started from the agents starter template from Cloudflare which already gave me everything needed to have a working chat agent with tools deployed on Cloudflare. I used Figma Make to generate me a nice UI, as I really have no aesthetic intuition or design talent. But for the 2 minutes I spent on it, not that bad UI I think...
+
+![Figma Make](./images/Figma_make_view.png)
