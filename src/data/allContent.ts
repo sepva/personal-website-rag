@@ -1,12 +1,7 @@
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { getContent } from './bundledContent.js';
 
 function loadContent(path: string): string {
-  return readFileSync(join(__dirname, 'content', path), 'utf-8');
+  return getContent(path) || '';
 }
 
 export interface ContentItem {

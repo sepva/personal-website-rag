@@ -3,7 +3,6 @@ import { allContent } from './data/allContent.ts';
 import { remark } from 'remark';
 import remarkParse from 'remark-parse';
 import { visit } from 'unist-util-visit';
-import * as path from 'path';
 
 // GitHub repository configuration for image CDN
 const GITHUB_CONFIG = {
@@ -35,8 +34,10 @@ async function transformMarkdownImages(markdownContent, markdownFilePath) {
 			const [pathPart, queryPart] = imageSrc.split('?');
 
 			// Resolve relative path to absolute path within the content directory
-			const markdownDir = path.dirname(markdownFilePath);
-			const resolvedPath = path.join(markdownDir, pathPart);
+			// Simple path.dirname equivalent: get directory part of path
+			const markdownDir = markdownFilePath.substring(0, markdownFilePath.lastIndexOf('/'));
+			// Simple path.join equivalent: concatenate paths
+			const resolvedPath = markdownDir ? `${markdownDir}/${pathPart}` : pathPart;
 
 			// Create GitHub raw URL
 			const githubUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.basePath}/${resolvedPath}`;

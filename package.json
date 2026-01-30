@@ -2,7 +2,10 @@
 	"name": "personal-website-rag",
 	"version": "0.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
+		"bundle": "node scripts/bundle-content.js",
+		"predeploy": "npm run bundle",
 		"deploy": "wrangler deploy && ./trigger-after-deploy.sh https://personal-website-rag.seppe-vanswegenoven.workers.dev",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
