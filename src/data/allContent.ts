@@ -34,14 +34,25 @@ export const academic: ContentItem[] = [
   {
     id: "what_did_i_study",
     title: "What did I study?",
-    description: "An overview of my academic background, including the influential courses and projects I undertook during my studies.",
+    description: "An overview of my academic background, including the influential courses I undertook during my studies.",
+    tags: ["Education"],
     type: "academic",
     date: "June 2025",
     fullContent: loadContent("academic/what_did_i_study.md")
   }
 ];
 
-export const work: ContentItem[] = [];
+export const work: ContentItem[] = [
+  {
+    id: "my_student_work",
+    title: "My Student Work",
+    description: "A summary of student jobs.",
+    tags: ["Student Jobs"],
+    type: "work",
+    date: "June 2025",
+    fullContent: loadContent("work/my_student_work.md")
+  }
+];
 
 export const allContent: {
   projects: ContentItem[];
