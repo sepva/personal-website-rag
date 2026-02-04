@@ -114,9 +114,27 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 		const env = this.env;
 		for (const [name, data] of Object.entries(allContent)) {
 			await step.do(`create database record entry for ${name}`, async () => {
-				// Handle empty content list - delete table if it exists
+				// Handle empty content list - delete table and vectors if they exist
 				if (!data || data.length === 0) {
-					console.log(`No content found for ${name}, deleting table if it exists...`);
+					console.log(`No content found for ${name}, deleting table and vectors if they exist...`);
+					
+					// First, get all vector IDs for this data type before dropping the table
+					try {
+						const getAllIdsQuery = `SELECT id FROM ${name}`;
+						const ids = await env.DB.prepare(getAllIdsQuery).all();
+						
+						// Delete corresponding vectors from vector index
+						if (ids.results && ids.results.length > 0) {
+							const vectorIds = ids.results.map((row) => row.id.toString());
+							console.log(`Deleting ${vectorIds.length} vectors for ${name}...`);
+							await env.VECTOR_INDEX.deleteByIds(vectorIds);
+						}
+					} catch (error) {
+						// Table might not exist, which is fine
+						console.log(`Table ${name} does not exist or is already empty`);
+					}
+					
+					// Drop the table
 					const dropTableQuery = `DROP TABLE IF EXISTS ${name}`;
 					await env.DB.prepare(dropTableQuery).run();
 					return;
@@ -128,18 +146,26 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 				const createTableQuery = `CREATE TABLE IF NOT EXISTS ${name} (${columns})`;
 				await env.DB.prepare(createTableQuery).run();
 
-				// Get all ids
+				// Get all existing IDs before clearing
 				const getAllIdsQuery = `SELECT id FROM ${name}`;
-				const ids = await env.DB.prepare(getAllIdsQuery).all();
+				const existingIds = await env.DB.prepare(getAllIdsQuery).all();
+
+				// Create a set of new IDs from the incoming data
+				const newIds = new Set(data.map((item) => item.id));
+
+				// Find IDs that exist in the database but not in the new data (deleted items)
+				const deletedIds = existingIds.results
+					? existingIds.results.filter((row) => !newIds.has(row.id)).map((row) => row.id.toString())
+					: [];
 
 				// Clear existing data from SQL table
 				const clearDataQuery = `DELETE FROM ${name}`;
 				await env.DB.prepare(clearDataQuery).run();
 
-				// Clear existing vectors from vector index
-				if (ids.results && ids.results.length > 0) {
-					const vectorIds = ids.results.map((row) => row.id.toString());
-					await env.VECTOR_INDEX.deleteByIds(vectorIds);
+				// Delete vectors for removed items
+				if (deletedIds.length > 0) {
+					console.log(`Deleting ${deletedIds.length} vectors for removed items in ${name}...`);
+					await env.VECTOR_INDEX.deleteByIds(deletedIds);
 				}
 
 				// Insert new data
