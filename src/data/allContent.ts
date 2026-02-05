@@ -10,7 +10,7 @@ export interface ContentItem {
   description: string;
   tags?: string[];
   link?: string;
-  type: 'project' | 'blog' | 'academic' | 'work';
+  type: 'project' | 'blog' | 'academic' | 'work' | 'faq';
   date?: string;
   fullContent?: string;
 }
@@ -54,14 +54,33 @@ export const work: ContentItem[] = [
   }
 ];
 
+export const faq: ContentItem[] = [
+  {
+    id: "faq1",
+    title: "Job Opportunities",
+    description: "Information about potential job opportunities and how to reach out for collaborations.",
+    type: "faq",
+    fullContent: loadContent("faq/job_opportunities.md")
+  },
+  {
+    id: "faq2",
+    title: "Role and Experience",
+    description: "Details about my current role, experience, and the kind of projects I am interested in.",
+    type: "faq",
+    fullContent: loadContent("faq/role_and_experience.md")
+  }
+];
+
 export const allContent: {
   projects: ContentItem[];
   blogs: ContentItem[];
   academic: ContentItem[];
   work: ContentItem[];
+  faq: ContentItem[]; 
 } = {
   projects,
   blogs,
   academic,
-  work
+  work,
+  faq
 };
