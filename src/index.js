@@ -14,6 +14,7 @@ const GITHUB_CONFIG = {
 
 /**
  * Transform markdown image references from local paths to GitHub raw URLs
+ * Handles both Markdown syntax ![](path) and HTML <img src="path"> tags
  * @param {string} markdownContent - The markdown content
  * @param {string} markdownFilePath - Path to the markdown file (e.g., "projects/proj1.md")
  * @returns {Promise<string>} - Transformed markdown with GitHub URLs
@@ -48,17 +49,64 @@ async function transformMarkdownImages(markdownContent, markdownFilePath) {
 			transformations.push({
 				original: imageSrc,
 				transformed: finalUrl,
+				type: 'markdown',
 			});
 		}
 	});
 
+	// Also find HTML img tags with src attributes
+	const imgTagRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi;
+	let match;
+	while ((match = imgTagRegex.exec(markdownContent)) !== null) {
+		const fullImgTag = match[0];
+		const imageSrc = match[1];
+
+		// Only transform relative paths (not already http/https URLs)
+		if (!imageSrc.startsWith('http://') && !imageSrc.startsWith('https://')) {
+			// Parse query parameters if present
+			const [pathPart, queryPart] = imageSrc.split('?');
+
+			// Resolve relative path to absolute path within the content directory
+			const markdownDir = markdownFilePath.substring(0, markdownFilePath.lastIndexOf('/'));
+			const resolvedPath = markdownDir ? `${markdownDir}/${pathPart}` : pathPart;
+
+			// Create GitHub raw URL
+			const githubUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.basePath}/${resolvedPath}`;
+
+			// Preserve query parameters
+			const finalUrl = queryPart ? `${githubUrl}?${queryPart}` : githubUrl;
+
+			transformations.push({
+				original: imageSrc,
+				transformed: finalUrl,
+				type: 'html',
+				fullTag: fullImgTag,
+			});
+		}
+	}
+
 	// Apply transformations to the markdown content
 	let transformedContent = markdownContent;
-	for (const { original, transformed } of transformations) {
+
+	// Transform Markdown syntax images
+	for (const transformation of transformations.filter((t) => t.type === 'markdown')) {
+		const { original, transformed } = transformation;
 		// Escape special regex characters in the original path
 		const escapedOriginal = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		const regex = new RegExp(`!\\[([^\\]]*)\\]\\(${escapedOriginal}\\)`, 'g');
 		transformedContent = transformedContent.replace(regex, `![$1](${transformed})`);
+	}
+
+	// Transform HTML img tags
+	for (const transformation of transformations.filter((t) => t.type === 'html')) {
+		const { original, transformed, fullTag } = transformation;
+		// Escape special regex characters
+		const escapedOriginal = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const escapedFullTag = fullTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		// Replace the src attribute value
+		const regex = new RegExp(escapedFullTag, 'g');
+		const newTag = fullTag.replace(original, transformed);
+		transformedContent = transformedContent.replace(regex, newTag);
 	}
 
 	return transformedContent;
@@ -117,12 +165,12 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 				// Handle empty content list - delete table and vectors if they exist
 				if (!data || data.length === 0) {
 					console.log(`No content found for ${name}, deleting table and vectors if they exist...`);
-					
+
 					// First, get all vector IDs for this data type before dropping the table
 					try {
 						const getAllIdsQuery = `SELECT id FROM ${name}`;
 						const ids = await env.DB.prepare(getAllIdsQuery).all();
-						
+
 						// Delete corresponding vectors from vector index
 						if (ids.results && ids.results.length > 0) {
 							const vectorIds = ids.results.map((row) => row.id.toString());
@@ -133,7 +181,7 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 						// Table might not exist, which is fine
 						console.log(`Table ${name} does not exist or is already empty`);
 					}
-					
+
 					// Drop the table
 					const dropTableQuery = `DROP TABLE IF EXISTS ${name}`;
 					await env.DB.prepare(dropTableQuery).run();

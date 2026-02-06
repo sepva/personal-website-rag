@@ -24,4 +24,4 @@ In high-school I studied "Wetenschappen-Wiskunde 8u", which means I studied scie
 
 ## My Master Thesis
 
-My master thesis was called "Personalisatie van humorgeneratie door Large Language Models'. So in short, I tried to combine a bunch of NLP techniques (Retrieval Augmented Generation, Best-of-N sampling, Supervised Fine-Tuning and Direct Preference Optimization) to generate jokes that fit the humor preferences of a certain user. If you want to learn more about this, my thesis text is on my [Github](https://github.com/sepva/thesis_text) and I am working on publishing a shorter paper on the same topic.
+My master thesis was called "Personalisatie van humorgeneratie door Large Language Models'. So in short, I tried to combine a bunch of NLP techniques (Retrieval Augmented Generation, Best-of-N sampling, Supervised Fine-Tuning and Direct Preference Optimization) to generate jokes that fit the humor preferences of a certain user. If you want to learn more about this, my thesis text is on my [Github](https://github.com/sepva/thesis_text/blob/main/masterproef.pdf) and I am working on publishing a shorter paper on the same topic.

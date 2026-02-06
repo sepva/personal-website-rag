@@ -25,6 +25,25 @@ export const projects: ContentItem[] = [
     date: 'January 2026',
     link: 'https://personal-website.seppe-vanswegenoven.workers.dev/',
     fullContent: loadContent('projects/this_website.md')
+  },
+  {
+    id: 'amber_advent',
+    title: 'AmberAdvent: A Digital Advent Calendar Gift',
+    description: 'An interactive online advent calendar with 24 virtual doors built as a personal gift. Each day unlocks to reveal a new surprise, from photos to sweet messages.',
+    tags: ['React', 'Vite', 'Tailwind CSS', 'Cloudflare Pages', 'Web Development'],
+    type: 'project',
+    date: 'December 2025',
+    link: 'https://amberadvent.pages.dev/',
+    fullContent: loadContent('projects/amber_advent.md')
+  },
+  {
+    id: 'villa_panis',
+    title: 'Villa Panis: A Vacation Rental Website',
+    description: 'A professional vacation rental website for a family villa in Spain. A React-based information portal showcasing amenities, photos, and local attractions.',
+    tags: ['React', 'Vite', 'Cloudflare Pages', 'Web Development'],
+    type: 'project',
+    link: 'https://melios.be/home',
+    fullContent: loadContent('projects/villa_panis.md')
   }
 ];
 
@@ -39,6 +58,23 @@ export const academic: ContentItem[] = [
     type: "academic",
     date: "June 2025",
     fullContent: loadContent("academic/what_did_i_study.md")
+  },
+  {
+    id: "master_thesis",
+    title: "My Master Thesis: Personalized Humor Generation with Language Models",
+    description: "Built JokeTailor, a system combining multiple ML techniques to generate personalized jokes achieving a 76% preference rate over non-personalized baselines.",
+    tags: ["ML", "NLP", "Personalization", "RAG", "LLMs", "Research"],
+    type: "academic",
+    date: "June 2025",
+    fullContent: loadContent("academic/master_thesis.md")
+  },
+  {
+    id: "some_nice_academic_projects",
+    title: "Engineering and Computer Science projects",
+    description: "A collection of fun and educational projects from my 5 years of studying engineering and computer science, including robotics, electronics, and software development.",
+    tags: ["Education", "Arduino", "Electronics", "Projects", "ML"],
+    type: "academic",
+    fullContent: loadContent("academic/some_nice_academic_projects.md")
   }
 ];
 
@@ -51,6 +87,15 @@ export const work: ContentItem[] = [
     type: "work",
     date: "June 2025",
     fullContent: loadContent("work/my_student_work.md")
+  },
+  {
+    id: "first_months_at_ae",
+    title: "My first months at AE",
+    description: "Started my career at AE with intensive training, competed in a 3-day Vlaanderen Hackathon, and worked on an AI-first strategy project at Mediagenix.",
+    tags: ["AE", "Career", "AI", "Hackathon", "Consulting"],
+    type: "work",
+    date: "October 2025",
+    fullContent: loadContent("work/first_months_at_ae.md")
   }
 ];
 
