@@ -188,88 +188,94 @@ export class RAGWorkflow extends WorkflowEntrypoint {
 					return;
 				}
 
-				// Create table if it doesn't exist
-				const keys = Object.keys(data[0]);
-				const columns = keys.map((key) => `${key} TEXT`).join(', ');
-				const createTableQuery = `CREATE TABLE IF NOT EXISTS ${name} (${columns})`;
-				await env.DB.prepare(createTableQuery).run();
-
-				// Get all existing IDs before clearing
+			// Get all existing IDs before dropping table (for vector cleanup)
+			let existingIds = { results: [] };
+			try {
 				const getAllIdsQuery = `SELECT id FROM ${name}`;
-				const existingIds = await env.DB.prepare(getAllIdsQuery).all();
+				existingIds = await env.DB.prepare(getAllIdsQuery).all();
+			} catch (error) {
+				// Table might not exist yet, which is fine
+				console.log(`Table ${name} does not exist yet, will create it`);
+			}
 
-				// Create a set of new IDs from the incoming data
-				const newIds = new Set(data.map((item) => item.id));
+			// Always drop and recreate table to ensure schema matches data structure
+			const dropTableQuery = `DROP TABLE IF EXISTS ${name}`;
+			await env.DB.prepare(dropTableQuery).run();
 
-				// Find IDs that exist in the database but not in the new data (deleted items)
-				const deletedIds = existingIds.results
-					? existingIds.results.filter((row) => !newIds.has(row.id)).map((row) => row.id.toString())
-					: [];
+			// Create table with current schema
+			const keys = Object.keys(data[0]);
+			const columns = keys.map((key) => `${key} TEXT`).join(', ');
+			const createTableQuery = `CREATE TABLE ${name} (${columns})`;
+			await env.DB.prepare(createTableQuery).run();
 
-				// Clear existing data from SQL table
-				const clearDataQuery = `DELETE FROM ${name}`;
-				await env.DB.prepare(clearDataQuery).run();
+			// Create a set of new IDs from the incoming data
+			const newIds = new Set(data.map((item) => item.id));
 
-				// Delete vectors for removed items
-				if (deletedIds.length > 0) {
-					console.log(`Deleting ${deletedIds.length} vectors for removed items in ${name}...`);
-					await env.VECTOR_INDEX.deleteByIds(deletedIds);
+			// Find IDs that exist in the old table but not in the new data (deleted items)
+			const deletedIds = existingIds.results
+				? existingIds.results.filter((row) => !newIds.has(row.id)).map((row) => row.id.toString())
+				: [];
+
+			// Delete vectors for removed items
+			if (deletedIds.length > 0) {
+				console.log(`Deleting ${deletedIds.length} vectors for removed items in ${name}...`);
+				await env.VECTOR_INDEX.deleteByIds(deletedIds);
+			}
+
+			// Insert new data
+			const insertDataQuery = `INSERT INTO ${name} (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')}) RETURNING *`;
+			const preparedQuery = env.DB.prepare(insertDataQuery);
+
+			for (const item of data) {
+				// Transform markdown images to GitHub URLs
+				let processedItem = { ...item };
+				if (item.fullContent) {
+					// Construct the markdown file path relative to content directory
+					// Assuming the structure: <type>/<filename>.md
+					const markdownPath = `${name}/${item.id}.md`;
+					processedItem.fullContent = await transformMarkdownImages(item.fullContent, markdownPath);
 				}
 
-				// Insert new data
-				const insertDataQuery = `INSERT INTO ${name} (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')}) RETURNING *`;
-				const preparedQuery = env.DB.prepare(insertDataQuery);
-
-				for (const item of data) {
-					// Transform markdown images to GitHub URLs
-					let processedItem = { ...item };
-					if (item.fullContent) {
-						// Construct the markdown file path relative to content directory
-						// Assuming the structure: <type>/<filename>.md
-						const markdownPath = `${name}/${item.id}.md`;
-						processedItem.fullContent = await transformMarkdownImages(item.fullContent, markdownPath);
+				const values = keys.map((key) => {
+					const value = processedItem[key];
+					// Handle undefined values
+					if (value === undefined) {
+						return null;
 					}
+					// Convert arrays and objects to JSON strings for D1
+					if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
+						return JSON.stringify(value);
+					}
+					return value;
+				});
 
-					const values = keys.map((key) => {
-						const value = processedItem[key];
-						// Handle undefined values
-						if (value === undefined) {
-							return null;
-						}
-						// Convert arrays and objects to JSON strings for D1
-						if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-							return JSON.stringify(value);
-						}
-						return value;
+				// Insert record into the database
+				const { results } = await preparedQuery.bind(...values).run();
+				const record = results[0];
+				if (!record) throw new Error(`Failed to create entry in ${name}`);
+
+				// Generate embedding for the content
+				const embedding = await step.do(`generate embedding for ${item.id}`, async () => {
+					const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
+						text: processedItem.fullContent,
 					});
+					const values = embedding.data[0];
+					if (!values) throw new Error('Failed to generate vector embedding');
+					return values;
+				});
 
-					// Insert record into the database
-					const { results } = await preparedQuery.bind(...values).run();
-					const record = results[0];
-					if (!record) throw new Error(`Failed to create entry in ${name}`);
-
-					// Generate embedding for the content
-					const embedding = await step.do(`generate embedding for ${item.id}`, async () => {
-						const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', {
-							text: processedItem.fullContent,
-						});
-						const values = embedding.data[0];
-						if (!values) throw new Error('Failed to generate vector embedding');
-						return values;
-					});
-
-					// Insert embedding into the vector index
-					await step.do(`insert vectors for ${item.id}`, async () => {
-						return env.VECTOR_INDEX.upsert([
-							{
-								id: record.id.toString(),
-								values: embedding,
-								metadata: { data_type: name },
-							},
-						]);
-					});
-				}
-			});
-		}
+				// Insert embedding into the vector index
+				await step.do(`insert vectors for ${item.id}`, async () => {
+					return env.VECTOR_INDEX.upsert([
+						{
+							id: record.id.toString(),
+							values: embedding,
+							metadata: { data_type: name },
+						},
+					]);
+				});
+			}
+		});
 	}
+}
 }
