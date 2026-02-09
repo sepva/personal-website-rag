@@ -13,6 +13,7 @@ export interface ContentItem {
   type: 'project' | 'blog' | 'academic' | 'work' | 'faq';
   date?: string;
   fullContent?: string;
+  shareable_link?: string;
 }
 
 export const projects: ContentItem[] = [
@@ -24,6 +25,7 @@ export const projects: ContentItem[] = [
     type: 'project',
     date: 'January 2026',
     link: 'https://personal-website.seppe-vanswegenoven.workers.dev/',
+    shareable_link: 'this-website',
     fullContent: loadContent('projects/this_website.md')
   },
   {
@@ -34,6 +36,7 @@ export const projects: ContentItem[] = [
     type: 'project',
     date: 'December 2025',
     link: 'https://amberadvent.pages.dev/',
+    shareable_link: 'amber-advent',
     fullContent: loadContent('projects/amber_advent.md')
   },
   {
@@ -43,6 +46,7 @@ export const projects: ContentItem[] = [
     tags: ['React', 'Vite', 'Cloudflare Pages', 'Web Development'],
     type: 'project',
     link: 'https://melios.be/home',
+    shareable_link: 'villa-panis',
     fullContent: loadContent('projects/villa_panis.md')
   }
 ];
@@ -57,6 +61,7 @@ export const academic: ContentItem[] = [
     tags: ["Education"],
     type: "academic",
     date: "June 2025",
+    shareable_link: 'what-did-i-study',
     fullContent: loadContent("academic/what_did_i_study.md")
   },
   {
@@ -66,6 +71,7 @@ export const academic: ContentItem[] = [
     tags: ["ML", "NLP", "Personalization", "RAG", "LLMs", "Research"],
     type: "academic",
     date: "June 2025",
+    shareable_link: 'master-thesis',
     fullContent: loadContent("academic/master_thesis.md")
   },
   {
@@ -74,6 +80,7 @@ export const academic: ContentItem[] = [
     description: "A collection of fun and educational projects from my 5 years of studying engineering and computer science, including robotics, electronics, and software development.",
     tags: ["Education", "Arduino", "Electronics", "Projects", "ML"],
     type: "academic",
+    shareable_link: 'academic-projects',
     fullContent: loadContent("academic/some_nice_academic_projects.md")
   }
 ];
@@ -86,6 +93,7 @@ export const work: ContentItem[] = [
     tags: ["Student Jobs"],
     type: "work",
     date: "June 2025",
+    shareable_link: 'student-work',
     fullContent: loadContent("work/my_student_work.md")
   },
   {
@@ -95,6 +103,7 @@ export const work: ContentItem[] = [
     tags: ["AE", "Career", "AI", "Hackathon", "Consulting"],
     type: "work",
     date: "October 2025",
+    shareable_link: 'first-months-at-ae',
     fullContent: loadContent("work/first_months_at_ae.md")
   }
 ];
