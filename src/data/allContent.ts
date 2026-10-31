@@ -87,6 +87,16 @@ export const academic: ContentItem[] = [
 
 export const work: ContentItem[] = [
   {
+    id: "tender_ai",
+    title: "Tender AI: Teaching a Machine to Read Public Tenders",
+    description: "Worked as AI engineer/architect on a tender ingestion and matching engine that maps free-text tender lines to products using multiple vector searches and weights trained on historical data.",
+    tags: ["AE", "AI", "Vector Search", "RAG", "Matching", "Architecture"],
+    type: "work",
+    date: "August 2026",
+    shareable_link: 'tender-ai',
+    fullContent: loadContent("work/tender_ai.md")
+  },
+  {
     id: "skill_market",
     title: "Skill Market: Building AE's Internal AI Skill Marketplace",
     description: "Proposed and built an internal web app for AE employees to upload, browse, and download AI skills. From personal pitch to official AE AI Programme initiative.",
