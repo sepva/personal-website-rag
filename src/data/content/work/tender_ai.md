@@ -6,7 +6,7 @@
 
 Public bodies such as municipalities, hospitals and schools can't just place an order. They publish a tender with a long list of items they need, often hundreds or thousands of lines. Each line is written in the buyer's own words, sometimes in another language, and often describes a product by what it does rather than what it's called. A supplier who wants to bid has to match every line to a product in its own catalogue. Until now, that work was done by hand, line by line, by a few experienced people.
 
-I recently spent a short but intense stretch on a project to change that. Together with colleagues at AE, I helped build the first version of **Tender AI**, a system that reads historical and incoming tenders and proposes the right product for each line.
+I spent a short but intense stretch on a project to change that. Together with colleagues at AE, I helped build the first version of **Tender AI**, a system that reads historical and incoming tenders and proposes the right product for each line.
 
 ## Three problems, three building blocks
 
