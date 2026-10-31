@@ -87,6 +87,16 @@ export const academic: ContentItem[] = [
 
 export const work: ContentItem[] = [
   {
+    id: "skill_market",
+    title: "Skill Market: Building AE's Internal AI Skill Marketplace",
+    description: "Proposed and built an internal web app for AE employees to upload, browse, and download AI skills. From personal pitch to official AE AI Programme initiative.",
+    tags: ["AE", "AI", "Internal Tools", ".NET", "React", "Azure", "MCP", "Stakeholder Management"],
+    type: "work",
+    date: "June 2026",
+    shareable_link: 'skill-market',
+    fullContent: loadContent("work/skill_market.md")
+  },
+  {
     id: "my_student_work",
     title: "My Student Work",
     description: "A summary of student jobs.",
